@@ -17,6 +17,8 @@ connectDB();
 
 // ✅ Global Middlewares
 app.use(express.json());
+
+
 const allowedOrigins = [
   "http://localhost:5173",
   "https://skilloracle-frontend.vercel.app",
@@ -25,19 +27,25 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow requests with no origin (Postman, server-to-server)
+      // Allow non-browser requests (Postman, server-to-server)
       if (!origin) return callback(null, true);
 
+      // Allow localhost & main prod domain
       if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
+        return callback(null, true);
       }
+
+      // ✅ Allow ALL Vercel preview deployments
+      if (origin.endsWith(".vercel.app")) {
+        return callback(null, true);
+      }
+
+      // Otherwise block
+      return callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
   })
 );
-
 app.use(cookieParser());
 app.use(helmet());
 
